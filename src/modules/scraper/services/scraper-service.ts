@@ -1,7 +1,6 @@
-// import pup from "puppeteer";
 import pup from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { ScraperResult } from "../model/scraper-result.js";
+import { ScraperResult } from "../entities/scraper-result.js";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -54,9 +53,8 @@ export class ScraperHandler {
       });
     });
 
-    // console.log(breaches);
+    await page.close();
 
-    await page;
     return breaches;
   }
 }
