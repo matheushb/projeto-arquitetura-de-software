@@ -1,11 +1,11 @@
 import pup from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { ScraperResult } from "../entities/scraper-result.js";
+import { ScraperResult } from "../../../entities/scraper-result.js";
+import { sleep } from "../../../../../infra/utils/sleep.js";
+import { ScrapingStrategy } from "../scraper.strategy.interface.js";
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-export class ScraperHandler {
-  async handle(searchValue: string): Promise<ScraperResult[]> {
+export class DatabreachStrategy implements ScrapingStrategy {
+  async handle(searchInput: string): Promise<ScraperResult[]> {
     pup.use(StealthPlugin());
 
     const browser = await (pup as any).launch({
@@ -20,7 +20,7 @@ export class ScraperHandler {
     await sleep(3000);
 
     await page.waitForSelector('input[id="search"]');
-    await page.type('input[id="search"]', searchValue, { delay: 40 });
+    await page.type('input[id="search"]', searchInput, { delay: 40 });
 
     //apertar o botao
     await page.evaluate(() => {
