@@ -1,7 +1,8 @@
 import { Request, Response, Router } from "express";
 import { LogManager } from "../../../infra/logger/log-manager";
+import { Controller } from "../../../infra/interfaces/controller.interface";
 
-export class LogController {
+export class LogController implements Controller {
   private router: Router;
   private logMananager = LogManager.getInstance();
 
