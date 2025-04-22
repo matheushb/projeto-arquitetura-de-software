@@ -1,49 +1,43 @@
 import { Request, Response, Router } from "express";
-import { ScraperHandler } from "../services/scraper-service";
 import { Mailer } from "../../../infra/mailer/mailer";
 import { LogManager } from "../../../infra/logger/log-manager";
+import { ScrapingMethodFactory } from "../services/scraper/scraping-method.factory";
+import { Controller } from "../../../infra/interfaces/controller.interface";
 
-export class ScraperController {
+export class ScraperController implements Controller {
   private router: Router;
   private logMananager = LogManager.getInstance();
 
-  constructor(
-    private readonly scraperService: ScraperHandler,
-    private readonly mailer: Mailer
-  ) {
+  constructor(private readonly mailer: Mailer) {
     this.router = Router();
     this.setRoutes();
   }
 
   async handle(req: Request, res: Response) {
-    console.log(req.params);
-
-    const email = req.params["email"];
     const search = req.params["input"];
+    const source = req.params["source"];
+    const mail = "user@mail.com"; //mockado, mas seria referente ao usuário logado/organização.
 
-    const result = await this.scraperService.handle(search);
+    const scrapingMethod = ScrapingMethodFactory.createScraper(source);
+
+    const result = await scrapingMethod.handle(search);
 
     this.logMananager.addLog(JSON.stringify(result));
 
-    console.log("sending");
+    if (result && result.length) {
+      await this.mailer.sendMail({
+        from: "no-reply@thronosec.com",
+        html: JSON.stringify(result, null, 2),
+        subject: "Dados vazados identificados: ",
+        to: mail,
+      });
+    }
 
-    this.logMananager.addLog("sending email to " + email);
-
-    await this.mailer.sendMail({
-      from: "abc@gmail.com",
-      html: JSON.stringify(result, null, 2),
-      subject: "Dados vazados identificados: ",
-      to: email,
-    });
-
-    this.logMananager.addLog("email sent to " + email);
-
-    res.json(result);
-    return;
+    res.status(200).json(result);
   }
 
   setRoutes() {
-    this.router.get("/scrape-data/:input/:email", this.handle.bind(this));
+    this.router.get("/scraper/:source/:input", this.handle.bind(this));
   }
 
   getRouter() {
